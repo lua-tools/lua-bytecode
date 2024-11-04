@@ -1,0 +1,11 @@
+[package]
+name = "lua-bytecode"
+version = "0.1.0"
+edition = "2021"
+license = "GPL3"
+
+[features]
+lua51 = []
+luau = []
+
+[dependencies]
