@@ -41,7 +41,7 @@ impl Buffer {
 
     pub fn position(&self) -> u64 {
         self.cursor.position()
-   }
+    }
 
     pub fn set_position(&mut self, position: u64) {
         self.cursor.set_position(position)

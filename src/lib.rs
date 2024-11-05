@@ -14,6 +14,7 @@ enum Format {
     Luau
 }
 
+#[derive(Default)]
 struct Header {
     pub version: u8,
     pub format: u8,
@@ -27,6 +28,13 @@ struct Header {
     pub instruction_size: u8,
 
     pub luajit_flags: u8
+}
+
+#[derive(Default)]
+pub struct Bytecode {
+    pub header: Header,
+    pub protos: Vec<Proto>,
+    pub main_proto_id: u32
 }
 
 pub struct LocalVariable {
@@ -49,12 +57,12 @@ pub struct Constant {
 }
 
 impl Constant {
-     fn new() -> Self {
-         Constant {
-             kind: 0,
-             value: Vec::new()
-         }
-     }
+    fn new() -> Self {
+        Constant {
+            kind: 0,
+            value: Vec::new()
+        }
+    }
 }
 
 pub struct Instruction(pub u32);
@@ -96,10 +104,4 @@ impl Proto {
     fn new() -> Self {
         Default::default()
     }
-}
-
-pub struct Bytecode {
-    pub header: Header,
-    pub protos: Vec<Proto>,
-    pub main_proto_id: u32
 }

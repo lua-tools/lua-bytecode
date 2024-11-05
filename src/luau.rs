@@ -14,7 +14,8 @@ const LUAU_CONSTANT_CLOSURE: u8 = 6;
 const LUAU_CONSTANT_VECTOR: u8 = 7;
 
 
-pub struct Bytecode {
+#[derive(Default)]
+pub struct LuaBytecode {
     pub version: u8,
     pub types_version: u8,
 
@@ -26,19 +27,9 @@ pub struct Bytecode {
     pub main_proto_id: u32
 }
 
-impl Bytecode {
+impl LuaBytecode {
     pub fn new() -> Self {
-        Bytecode {
-            version: 0,
-            types_version: 0,
-
-            userdata_type_map: Vec::new(),
-
-            protos: Vec::new(),
-            strings: Vec::new(),
-
-            main_proto_id: 0
-        }
+        Default::default()
     }
 
     pub fn parse(&mut self, data: &[u8]) {
@@ -418,11 +409,11 @@ impl LuauProto for Proto {
 }
 
 trait Variant {
-     fn read_variant(&mut self) -> u32;
-     fn write_variant(&mut self, value: u32);
+    fn read_variant(&mut self) -> u32;
+    fn write_variant(&mut self, value: u32);
 
-     fn read_string(&mut self) -> String;
-     fn write_string(&mut self, string: &str);
+    fn read_string(&mut self) -> String;
+    fn write_string(&mut self, string: &str);
 }
 
 impl Variant for Buffer {
@@ -461,10 +452,10 @@ impl Variant for Buffer {
     }
 
     fn write_string(&mut self, string: &str) {
-         let bytes = string.as_bytes();
-         self.write_variant(bytes.len() as u32);
-         for byte in bytes {
-             self.write(*byte);
-         }
+        let bytes = string.as_bytes();
+        self.write_variant(bytes.len() as u32);
+        for byte in bytes {
+            self.write(*byte);
+        }
     }
 }
