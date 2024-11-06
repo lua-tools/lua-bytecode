@@ -122,11 +122,11 @@ impl LuaBytecode {
             match constant.kind {
                 LUAU_CONSTANT_NIL => (),
                 LUAU_CONSTANT_BOOLEAN => {
-                    constant.value = buffer.read::<u8>().to_le_bytes().to_vec()
+                    constant.value = buffer.read::<u8>().to_le_bytes().to_vec();
                 },
 
                 LUAU_CONSTANT_NUMBER => {
-                    constant.value = buffer.read::<f64>().to_le_bytes().to_vec()
+                    constant.value = buffer.read::<f64>().to_le_bytes().to_vec();
                 },
 
                 LUAU_CONSTANT_STRING => {
@@ -139,6 +139,8 @@ impl LuaBytecode {
 
                 LUAU_CONSTANT_TABLE => {
                     let length = buffer.read_variant();
+                    constant.value.extend_from_slice(&length.to_le_bytes());
+
                     for _ in 0..length {
                         let key = buffer.read_variant();
                         constant.value.extend_from_slice(&key.to_le_bytes());
@@ -277,9 +279,20 @@ impl LuaBytecode {
                     buffer.write_variant(reference);
                 }
 
+                LUAU_CONSTANT_TABLE => {
+                    let mut shape = Buffer::new(constant.value.clone());
+                    let length = shape.read_variant();
+
+                    buffer.write_variant(length);
+                    for _ in 0..length {
+                        let key = shape.read_variant();
+                        buffer.write_variant(key);
+                    }
+                }
+
                 LUAU_CONSTANT_CLOSURE => {
-                    let fid = u32::from_le_bytes(constant.value.clone().as_slice().try_into().unwrap());
-                    buffer.write_variant(fid);
+                    let proto_id = u32::from_le_bytes(constant.value.clone().as_slice().try_into().unwrap());
+                    buffer.write_variant(proto_id);
                 }
 
                 _ => {
