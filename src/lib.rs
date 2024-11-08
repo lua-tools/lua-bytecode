@@ -79,7 +79,8 @@ pub struct Proto {
     pub bytecode_id: u32,
 
     pub max_stack_size: u8,
-    pub parameters_count: u8,
+    pub parameter_count: u8,
+    pub upvalue_count: u8,
     pub is_vararg: bool,
 
     pub flags: u8,

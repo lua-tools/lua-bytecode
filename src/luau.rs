@@ -84,8 +84,8 @@ impl LuaBytecode {
         proto.bytecode_id = index;
 
         proto.max_stack_size = buffer.read::<u8>();
-        proto.parameters_count = buffer.read::<u8>();
-        let upvalues_count = buffer.read::<u8>();
+        proto.parameter_count = buffer.read::<u8>();
+        proto.upvalue_count = buffer.read::<u8>();
         proto.is_vararg = buffer.read::<bool>();
 
         if self.version >= 4 {
@@ -202,6 +202,8 @@ impl LuaBytecode {
             }
 
             let upvalue_count = buffer.read_variant();
+            assert_eq!(upvalue_count as u8, proto.upvalue_count);
+
             for _ in 0..upvalue_count {
                 proto.upvalues.push(self.string_from_reference(buffer).unwrap().to_string());
             }
@@ -247,8 +249,8 @@ impl LuaBytecode {
         let proto = &self.protos[index as usize];
 
         buffer.write(proto.max_stack_size);
-        buffer.write(proto.parameters_count);
-        buffer.write(proto.upvalues.len() as u8);
+        buffer.write(proto.parameter_count);
+        buffer.write(proto.upvalue_count as u8);
         buffer.write(proto.is_vararg as u8);
 
         if self.version >= 4 {
