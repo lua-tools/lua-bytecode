@@ -161,6 +161,7 @@ impl LuaBytecode {
 
                 _ => unreachable!()
             }
+
             proto.constants.push(constant);
         }
 
@@ -180,7 +181,7 @@ impl LuaBytecode {
 
             for _ in 0..proto.instructions.len() {
                 let last_offset = buffer.read::<u8>();
-                proto.line_info.push(last_offset);
+                proto.line_info.push(last_offset as u32);
             }
 
             for _ in 0..intervals {
@@ -324,7 +325,7 @@ impl LuaBytecode {
             buffer.write::<u8>(proto.linegaplog2);
 
             for i in 0..proto.instructions.len() {
-                buffer.write::<u8>(proto.line_info[i]);
+                buffer.write::<u8>(proto.line_info[i] as u8);
             }
 
             for i in 0..proto.absolute_line_info.len() {

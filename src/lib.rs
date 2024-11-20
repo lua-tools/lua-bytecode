@@ -5,6 +5,9 @@ pub mod luau;
 #[cfg(feature = "lua51")]
 pub mod lua51;
 
+#[cfg(feature = "lua51")]
+pub const LUA_MAGIC: u32 = 0x61754c1b;
+
 enum Format {
     Lua51,
     Lua52,
@@ -14,22 +17,24 @@ enum Format {
     Luau
 }
 
+#[cfg(feature = "lua51")]
 #[derive(Default)]
 struct Header {
     pub version: u8,
     pub format: u8,
 
     pub is_big_endian: bool,
-    pub is_number_integral: bool,
 
     pub int_size: u8,
     pub size_t_size: u8,
-    pub number_size: u8,
     pub instruction_size: u8,
+    pub number_size: u8,
 
+    pub is_number_integral: bool,
     pub luajit_flags: u8
 }
 
+#[cfg(feature = "lua51")]
 #[derive(Default)]
 pub struct Bytecode {
     pub header: Header,
@@ -46,9 +51,13 @@ pub struct LocalVariable {
     register: u8
 }
 
+#[cfg(feature = "lua51")]
 const LUA_CONSTANT_NIL: u8 = 0;
+#[cfg(feature = "lua51")]
 const LUA_CONSTANT_BOOLEAN: u8 = 1;
+#[cfg(feature = "lua51")]
 const LUA_CONSTANT_NUMBER: u8 = 3;
+#[cfg(feature = "lua51")]
 const LUA_CONSTANT_STRING: u8 = 4;
 
 pub struct Constant {
@@ -76,6 +85,7 @@ impl Instruction {
 
 #[derive(Default)]
 pub struct Proto {
+    #[cfg(feature = "luau")]
     pub bytecode_id: u32,
 
     pub max_stack_size: u8,
@@ -90,7 +100,7 @@ pub struct Proto {
     pub last_line_defined: u32,
 
     pub name: Option<String>,
-    pub line_info: Vec<u8>,
+    pub line_info: Vec<u32>,
     pub absolute_line_info: Vec<i32>,
     pub linegaplog2: u8,
 
