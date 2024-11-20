@@ -11,13 +11,11 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-    - name: build
-      run: cargo build --verbose -Flua51 -Fluau
-    - name: run tests
-      run: cargo test --verbose -Flua51 -Fluau
-
+      - name: build
+        run: cargo build --verbose -Flua51 -Fluau
+      - name: run tests
+        run: cargo test --verbose -Flua51 -Fluau
