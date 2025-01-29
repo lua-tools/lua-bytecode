@@ -7,7 +7,7 @@ pub struct Buffer {
 impl Buffer {
     pub fn new(data: Vec<u8>) -> Self {
         Self {
-            cursor: std::io::Cursor::new(data)
+            cursor: std::io::Cursor::new(data),
         }
     }
 
@@ -32,9 +32,7 @@ impl Buffer {
 
     pub fn write<T: Copy>(&mut self, value: T) {
         let size = std::mem::size_of::<T>();
-        let buffer = unsafe {
-            std::slice::from_raw_parts_mut(&value as *const T as *mut u8, size)
-        };
+        let buffer = unsafe { std::slice::from_raw_parts_mut(&value as *const T as *mut u8, size) };
 
         self.cursor.write_all(&buffer).unwrap();
     }

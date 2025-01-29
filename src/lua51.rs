@@ -1,7 +1,6 @@
 use crate::*;
 use buffer::Buffer;
 
-
 pub trait LuaBytecode {
     fn new() -> Bytecode;
     fn parse(&mut self, data: &[u8]);
@@ -41,7 +40,7 @@ impl LuaBytecode for Bytecode {
             instruction_size: buffer.read::<u8>(),
             number_size: buffer.read::<u8>(),
             is_number_integral: buffer.read::<bool>(),
-            luajit_flags: 0
+            luajit_flags: 0,
         }
     }
 
@@ -110,7 +109,7 @@ impl LuaBytecode for Bytecode {
                 start_pc: buffer.read::<u32>(),
                 end_pc: buffer.read::<u32>(),
                 #[cfg(feature = "luau")]
-                register: 0
+                register: 0,
             })
         }
 
@@ -169,7 +168,9 @@ impl LuaBytecode for Bytecode {
                 }
 
                 LUA_CONSTANT_NUMBER => {
-                    buffer.write::<f64>(f64::from_le_bytes(constant.value.as_slice().try_into().unwrap()));
+                    buffer.write::<f64>(f64::from_le_bytes(
+                        constant.value.as_slice().try_into().unwrap(),
+                    ));
                 }
 
                 LUA_CONSTANT_STRING => {
@@ -222,7 +223,6 @@ impl LuaString for Buffer {
 
         String::from_utf8(bytes).unwrap()
     }
-
 
     fn write_string(&mut self, string: String) {
         self.write::<u64>(string.len() as u64);

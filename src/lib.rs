@@ -1,9 +1,9 @@
 mod buffer;
 
-#[cfg(feature = "luau")]
-pub mod luau;
 #[cfg(feature = "lua51")]
 pub mod lua51;
+#[cfg(feature = "luau")]
+pub mod luau;
 
 #[cfg(feature = "lua51")]
 pub const LUA_MAGIC: u32 = 0x61754c1b;
@@ -14,7 +14,7 @@ enum Format {
     Lua53,
     Lua54,
     LuaJit,
-    Luau
+    Luau,
 }
 
 #[cfg(feature = "lua51")]
@@ -31,7 +31,7 @@ struct Header {
     pub number_size: u8,
 
     pub is_number_integral: bool,
-    pub luajit_flags: u8
+    pub luajit_flags: u8,
 }
 
 #[cfg(feature = "lua51")]
@@ -39,7 +39,7 @@ struct Header {
 pub struct Bytecode {
     pub header: Header,
     pub protos: Vec<Proto>,
-    pub main_proto_id: u32
+    pub main_proto_id: u32,
 }
 
 pub struct LocalVariable {
@@ -48,7 +48,7 @@ pub struct LocalVariable {
     end_pc: u32,
 
     #[cfg(feature = "luau")]
-    register: u8
+    register: u8,
 }
 
 #[cfg(feature = "lua51")]
@@ -62,14 +62,14 @@ const LUA_CONSTANT_STRING: u8 = 4;
 
 pub struct Constant {
     kind: u8,
-    value: Vec<u8>
+    value: Vec<u8>,
 }
 
 impl Constant {
     fn new() -> Self {
         Constant {
             kind: 0,
-            value: Vec::new()
+            value: Vec::new(),
         }
     }
 }
@@ -81,7 +81,6 @@ impl Instruction {
         Instruction(u32::from_le_bytes(bytes.try_into().unwrap()))
     }
 }
-
 
 #[derive(Default)]
 pub struct Proto {
@@ -108,7 +107,7 @@ pub struct Proto {
     pub locals: Vec<LocalVariable>,
     pub upvalues: Vec<String>,
     pub constants: Vec<Constant>,
-    pub instructions: Vec<Instruction>
+    pub instructions: Vec<Instruction>,
 }
 
 impl Proto {

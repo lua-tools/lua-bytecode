@@ -1,5 +1,5 @@
-use crate::{Instruction, Proto, Constant, LocalVariable};
 use crate::buffer::Buffer;
+use crate::{Constant, Instruction, LocalVariable, Proto};
 
 const LBC_TYPE_TAGGED_USERDATA_END: u8 = 64 + 32;
 const LBC_TYPE_TAGGED_USERDATA_BASE: u8 = 64;
@@ -13,7 +13,6 @@ const LUAU_CONSTANT_TABLE: u8 = 5;
 const LUAU_CONSTANT_CLOSURE: u8 = 6;
 const LUAU_CONSTANT_VECTOR: u8 = 7;
 
-
 #[derive(Default)]
 pub struct LuaBytecode {
     pub version: u8,
@@ -24,7 +23,7 @@ pub struct LuaBytecode {
     pub protos: Vec<Proto>,
     pub strings: Vec<String>,
 
-    pub main_proto_id: u32
+    pub main_proto_id: u32,
 }
 
 impl LuaBytecode {
@@ -38,13 +37,17 @@ impl LuaBytecode {
         self.version = buffer.read::<u8>();
         if self.version == 0 {
             eprintln!("Error message in bytecode");
-            return
+            return;
         } else if self.version < 4 || self.version > 6 {
             eprintln!("Unsupported bytecode version");
-            return
+            return;
         }
 
-        self.types_version = if self.version >= 4 { buffer.read::<u8>() } else { 0 };
+        self.types_version = if self.version >= 4 {
+            buffer.read::<u8>()
+        } else {
+            0
+        };
 
         // read string table
         let string_count = buffer.read_variant();
@@ -123,19 +126,23 @@ impl LuaBytecode {
                 LUAU_CONSTANT_NIL => (),
                 LUAU_CONSTANT_BOOLEAN => {
                     constant.value = buffer.read::<u8>().to_le_bytes().to_vec();
-                },
+                }
 
                 LUAU_CONSTANT_NUMBER => {
                     constant.value = buffer.read::<f64>().to_le_bytes().to_vec();
-                },
+                }
 
                 LUAU_CONSTANT_STRING => {
-                    constant.value = self.string_from_reference(buffer).unwrap().as_bytes().to_vec();
-                },
+                    constant.value = self
+                        .string_from_reference(buffer)
+                        .unwrap()
+                        .as_bytes()
+                        .to_vec();
+                }
 
                 LUAU_CONSTANT_IMPORT => {
                     constant.value = buffer.read::<i32>().to_le_bytes().to_vec();
-                },
+                }
 
                 LUAU_CONSTANT_TABLE => {
                     let length = buffer.read_variant();
@@ -145,21 +152,29 @@ impl LuaBytecode {
                         let key = buffer.read_variant();
                         constant.value.extend_from_slice(&key.to_le_bytes());
                     }
-                },
+                }
 
                 LUAU_CONSTANT_CLOSURE => {
                     let proto_id = buffer.read_variant();
                     constant.value = proto_id.to_le_bytes().to_vec();
-                },
-
-                LUAU_CONSTANT_VECTOR => {
-                    constant.value.extend_from_slice(&buffer.read::<f32>().to_le_bytes());
-                    constant.value.extend_from_slice(&buffer.read::<f32>().to_le_bytes());
-                    constant.value.extend_from_slice(&buffer.read::<f32>().to_le_bytes());
-                    constant.value.extend_from_slice(&buffer.read::<f32>().to_le_bytes());
                 }
 
-                _ => unreachable!()
+                LUAU_CONSTANT_VECTOR => {
+                    constant
+                        .value
+                        .extend_from_slice(&buffer.read::<f32>().to_le_bytes());
+                    constant
+                        .value
+                        .extend_from_slice(&buffer.read::<f32>().to_le_bytes());
+                    constant
+                        .value
+                        .extend_from_slice(&buffer.read::<f32>().to_le_bytes());
+                    constant
+                        .value
+                        .extend_from_slice(&buffer.read::<f32>().to_le_bytes());
+                }
+
+                _ => unreachable!(),
             }
 
             proto.constants.push(constant);
@@ -198,7 +213,7 @@ impl LuaBytecode {
                     name: self.string_from_reference(buffer).unwrap().to_string(),
                     start_pc: buffer.read_variant(),
                     end_pc: buffer.read_variant(),
-                    register: buffer.read::<u8>()
+                    register: buffer.read::<u8>(),
                 });
             }
 
@@ -206,7 +221,9 @@ impl LuaBytecode {
             assert_eq!(upvalue_count as u8, proto.upvalue_count);
 
             for _ in 0..upvalue_count {
-                proto.upvalues.push(self.string_from_reference(buffer).unwrap().to_string());
+                proto
+                    .upvalues
+                    .push(self.string_from_reference(buffer).unwrap().to_string());
             }
         }
 
@@ -278,7 +295,8 @@ impl LuaBytecode {
 
             match constant.kind {
                 LUAU_CONSTANT_STRING => {
-                    let reference = self.string_reference(&String::from_utf8(constant.value.clone()).unwrap());
+                    let reference =
+                        self.string_reference(&String::from_utf8(constant.value.clone()).unwrap());
                     buffer.write_variant(reference);
                 }
 
@@ -294,7 +312,8 @@ impl LuaBytecode {
                 }
 
                 LUAU_CONSTANT_CLOSURE => {
-                    let proto_id = u32::from_le_bytes(constant.value.clone().as_slice().try_into().unwrap());
+                    let proto_id =
+                        u32::from_le_bytes(constant.value.clone().as_slice().try_into().unwrap());
                     buffer.write_variant(proto_id);
                 }
 
@@ -360,9 +379,11 @@ impl LuaBytecode {
 
     fn string_from_reference(&self, buffer: &mut Buffer) -> Option<String> {
         let id = buffer.read_variant();
-        if id == 0 { return None }
+        if id == 0 {
+            return None;
+        }
 
-        Some(self.strings.get(id as usize -1).unwrap().to_string())
+        Some(self.strings.get(id as usize - 1).unwrap().to_string())
     }
 
     fn string_reference(&self, string: &str) -> u32 {
@@ -454,7 +475,9 @@ impl Variant for Buffer {
         loop {
             self.write::<u8>(((value & 127) | (((value > 127) as u32) << 7)) as u8);
             value >>= 7;
-            if value == 0 { break }
+            if value == 0 {
+                break;
+            }
         }
     }
 
@@ -471,6 +494,7 @@ impl Variant for Buffer {
 
     fn write_string(&mut self, string: &str) {
         let bytes = string.as_bytes();
+
         self.write_variant(bytes.len() as u32);
         for byte in bytes {
             self.write(*byte);
