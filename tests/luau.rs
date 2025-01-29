@@ -37,3 +37,27 @@ fn number() {
     assert_eq!(main_proto.locals.len(), 0);
     assert_eq!(main_proto.constants.len(), 2);
 }
+
+#[test]
+#[cfg(feature = "luau")]
+fn map_iter() {
+    let mut bytecode = LuaBytecode::new();
+    bytecode.parse(compile("map_iter").as_slice());
+
+    let main_proto = &bytecode.protos[bytecode.main_proto_id as usize];
+
+    assert_eq!(bytecode.protos.len(), 1);
+    assert_eq!(main_proto.locals.len(), 0);
+    assert_eq!(main_proto.constants.len(), 7);
+
+    let data = bytecode.write();
+
+    let mut bytecode = LuaBytecode::new();
+    bytecode.parse(data.as_slice());
+
+    let main_proto = &bytecode.protos[bytecode.main_proto_id as usize];
+
+    assert_eq!(bytecode.protos.len(), 1);
+    assert_eq!(main_proto.locals.len(), 0);
+    assert_eq!(main_proto.constants.len(), 7);
+}

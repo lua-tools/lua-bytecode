@@ -284,11 +284,11 @@ impl LuaBytecode {
 
                 LUAU_CONSTANT_TABLE => {
                     let mut shape = Buffer::new(constant.value.clone());
-                    let length = shape.read_variant();
+                    let length: u32 = shape.read();
 
                     buffer.write_variant(length);
                     for _ in 0..length {
-                        let key = shape.read_variant();
+                        let key: u32 = shape.read();
                         buffer.write_variant(key);
                     }
                 }
@@ -434,15 +434,17 @@ trait Variant {
 
 impl Variant for Buffer {
     fn read_variant(&mut self) -> u32 {
-        let mut value = 0;
-        let mut shift = 0;
+        let mut value: u32 = 0;
+        let mut shift: u32 = 0;
 
         loop {
-            let byte = self.read::<u8>();
-            value |= ((byte & 127) as u32) << shift;
+            let byte = self.read::<u8>() as u8;
+            value |= (byte as u32 & 127) << shift;
             shift += 7;
 
-            if (byte & 128) == 0 { break }
+            if (byte & 128) == 0 {
+                break;
+            }
         }
 
         value
