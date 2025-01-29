@@ -19,7 +19,7 @@ fn compile(name: &str) -> Vec<u8> {
 #[cfg(feature = "luau")]
 fn number() {
     let mut bytecode = LuaBytecode::new();
-    bytecode.parse(compile("number").as_slice());
+    bytecode.parse(compile("number").as_slice()).unwrap();
 
     let main_proto = &bytecode.protos[bytecode.main_proto_id as usize];
 
@@ -29,7 +29,7 @@ fn number() {
 
     let data = bytecode.write();
     let mut bytecode = LuaBytecode::new();
-    bytecode.parse(data.as_slice());
+    bytecode.parse(data.as_slice()).unwrap();
 
     let main_proto = &bytecode.protos[bytecode.main_proto_id as usize];
 
@@ -42,7 +42,7 @@ fn number() {
 #[cfg(feature = "luau")]
 fn map_iter() {
     let mut bytecode = LuaBytecode::new();
-    bytecode.parse(compile("map_iter").as_slice());
+    bytecode.parse(compile("map_iter").as_slice()).unwrap();
 
     let main_proto = &bytecode.protos[bytecode.main_proto_id as usize];
 
@@ -53,7 +53,7 @@ fn map_iter() {
     let data = bytecode.write();
 
     let mut bytecode = LuaBytecode::new();
-    bytecode.parse(data.as_slice());
+    bytecode.parse(data.as_slice()).unwrap();
 
     let main_proto = &bytecode.protos[bytecode.main_proto_id as usize];
 

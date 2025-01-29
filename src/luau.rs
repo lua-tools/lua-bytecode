@@ -31,16 +31,28 @@ impl LuaBytecode {
         Default::default()
     }
 
-    pub fn parse(&mut self, data: &[u8]) {
+    pub fn parse(&mut self, data: &[u8]) -> Result<(), String> {
         let mut buffer = Buffer::new(data.to_vec());
 
         self.version = buffer.read::<u8>();
         if self.version == 0 {
-            eprintln!("Error message in bytecode");
-            return;
+            let mut bytes = Vec::new();
+            loop {
+                let character = buffer.read::<u8>();
+                bytes.push(character);
+
+                if character == '\0' as u8 {
+                    break;
+                }
+            }
+
+            let error = std::ffi::CStr::from_bytes_with_nul(bytes.as_slice()).unwrap();
+            return Err(format!(
+                "Error message in bytecode: {}",
+                error.to_str().unwrap()
+            ));
         } else if self.version < 4 || self.version > 6 {
-            eprintln!("Unsupported bytecode version");
-            return;
+            return Err("Bytecode version mismatch".into());
         }
 
         self.types_version = if self.version >= 4 {
@@ -79,6 +91,7 @@ impl LuaBytecode {
         }
 
         self.main_proto_id = buffer.read_variant();
+        Ok(())
     }
 
     fn parse_proto(&self, index: u32, buffer: &mut Buffer) -> Proto {

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 mod buffer;
 
 #[cfg(feature = "lua51")]

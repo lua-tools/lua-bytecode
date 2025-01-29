@@ -1,5 +1,5 @@
 #[cfg(feature = "lua51")]
-use lua_bytecode::{Bytecode, lua51::LuaBytecode};
+use lua_bytecode::{lua51::LuaBytecode, Bytecode};
 
 use std::process::Command;
 
@@ -8,7 +8,10 @@ fn compile(name: &str) -> Vec<u8> {
     std::fs::create_dir_all("tests/cache").unwrap();
     let result = Command::new("sh")
         .arg("-c")
-        .arg(format!("(luac5.1 -o tests/cache/bytecode.out tests/lua51/{}.lua)", name))
+        .arg(format!(
+            "(luac5.1 -o tests/cache/bytecode.out tests/lua51/{}.lua)",
+            name
+        ))
         .output()
         .unwrap();
 
@@ -20,7 +23,7 @@ fn compile(name: &str) -> Vec<u8> {
 #[cfg(feature = "lua51")]
 fn number() {
     let mut bytecode = <Bytecode as LuaBytecode>::new();
-    bytecode.parse(compile("number").as_slice());
+    bytecode.parse(compile("number").as_slice()).unwrap();
 
     let main_proto = &bytecode.protos[bytecode.main_proto_id as usize];
 
@@ -30,7 +33,7 @@ fn number() {
 
     let data = bytecode.write();
     let mut bytecode = <Bytecode as LuaBytecode>::new();
-    bytecode.parse(data.as_slice());
+    bytecode.parse(data.as_slice()).unwrap();
 
     let main_proto = &bytecode.protos[bytecode.main_proto_id as usize];
 

@@ -3,7 +3,7 @@ use buffer::Buffer;
 
 pub trait LuaBytecode {
     fn new() -> Bytecode;
-    fn parse(&mut self, data: &[u8]);
+    fn parse(&mut self, data: &[u8]) -> Result<(), String>;
     fn parse_header(&self, buffer: &mut Buffer) -> Header;
     fn parse_proto(&mut self, buffer: &mut Buffer) -> Proto;
 
@@ -16,12 +16,14 @@ impl LuaBytecode for Bytecode {
         Default::default()
     }
 
-    fn parse(&mut self, data: &[u8]) {
+    fn parse(&mut self, data: &[u8]) -> Result<(), String> {
         let mut buffer = Buffer::new(data.to_vec());
 
         self.header = self.parse_header(&mut buffer);
         let main_proto = self.parse_proto(&mut buffer);
         self.protos.push(main_proto);
+
+        Ok(())
     }
 
     fn parse_header(&self, buffer: &mut Buffer) -> Header {

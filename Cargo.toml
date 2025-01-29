@@ -4,7 +4,7 @@ readme = "README.org"
 description = "A lua bytecode parser/encoder for lua5.1 and luau"
 repository = "https://github.com/elde-n/lua-bytecode"
 
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 license = "GPL-3.0-only"
 
