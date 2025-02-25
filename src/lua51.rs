@@ -81,7 +81,7 @@ impl LuaBytecode for Bytecode {
                 }
 
                 LUA_CONSTANT_STRING => {
-                    constant.value = buffer.read_string().as_bytes().to_vec();
+                    constant.value = buffer.read_string();
                 }
 
                 _ => {
@@ -176,7 +176,7 @@ impl LuaBytecode for Bytecode {
                 }
 
                 LUA_CONSTANT_STRING => {
-                    buffer.write_string(String::from_utf8(constant.value.clone()).unwrap());
+                    buffer.write_string(constant.value.clone());
                 }
 
                 _ => {
@@ -210,12 +210,12 @@ impl LuaBytecode for Bytecode {
 }
 
 trait LuaString {
-    fn read_string(&mut self) -> String;
-    fn write_string(&mut self, string: String);
+    fn read_string(&mut self) -> RawLuaString;
+    fn write_string(&mut self, string: RawLuaString);
 }
 
 impl LuaString for Buffer {
-    fn read_string(&mut self) -> String {
+    fn read_string(&mut self) -> RawLuaString {
         let mut bytes = Vec::new();
 
         let length = self.read::<u64>();
@@ -223,13 +223,13 @@ impl LuaString for Buffer {
             bytes.push(self.read::<u8>());
         }
 
-        String::from_utf8(bytes).unwrap()
+        bytes
     }
 
-    fn write_string(&mut self, string: String) {
+    fn write_string(&mut self, string: RawLuaString) {
         self.write::<u64>(string.len() as u64);
-        for byte in string.as_bytes() {
-            self.write::<u8>(*byte);
+        for byte in string {
+            self.write::<u8>(byte);
         }
     }
 }

@@ -1,5 +1,5 @@
 use crate::buffer::Buffer;
-use crate::{Constant, Instruction, LocalVariable, Proto};
+use crate::{Constant, Instruction, LocalVariable, Proto, RawLuaString};
 
 const LBC_TYPE_TAGGED_USERDATA_END: u8 = 64 + 32;
 const LBC_TYPE_TAGGED_USERDATA_BASE: u8 = 64;
@@ -21,7 +21,7 @@ pub struct LuaBytecode {
     pub userdata_type_map: Vec<u32>,
 
     pub protos: Vec<Proto>,
-    pub strings: Vec<String>,
+    pub strings: Vec<RawLuaString>,
 
     pub main_proto_id: u32,
 }
@@ -146,11 +146,7 @@ impl LuaBytecode {
                 }
 
                 LUAU_CONSTANT_STRING => {
-                    constant.value = self
-                        .string_from_reference(buffer)
-                        .unwrap()
-                        .as_bytes()
-                        .to_vec();
+                    constant.value = self.string_from_reference(buffer).unwrap();
                 }
 
                 LUAU_CONSTANT_IMPORT => {
@@ -223,7 +219,7 @@ impl LuaBytecode {
             let locvar_count = buffer.read_variant();
             for _ in 0..locvar_count {
                 proto.locals.push(LocalVariable {
-                    name: self.string_from_reference(buffer).unwrap().to_string(),
+                    name: self.string_from_reference(buffer).unwrap(),
                     start_pc: buffer.read_variant(),
                     end_pc: buffer.read_variant(),
                     register: buffer.read::<u8>(),
@@ -236,7 +232,7 @@ impl LuaBytecode {
             for _ in 0..upvalue_count {
                 proto
                     .upvalues
-                    .push(self.string_from_reference(buffer).unwrap().to_string());
+                    .push(self.string_from_reference(buffer).unwrap());
             }
         }
 
@@ -252,7 +248,7 @@ impl LuaBytecode {
         // write string table
         buffer.write_variant(self.strings.len() as u32);
         for string in self.strings.iter() {
-            buffer.write_string(string);
+            buffer.write_string(string.clone());
         }
 
         // write userdata type remapping table
@@ -308,8 +304,7 @@ impl LuaBytecode {
 
             match constant.kind {
                 LUAU_CONSTANT_STRING => {
-                    let reference =
-                        self.string_reference(&String::from_utf8(constant.value.clone()).unwrap());
+                    let reference = self.string_reference(constant.value.clone());
                     buffer.write_variant(reference);
                 }
 
@@ -345,7 +340,7 @@ impl LuaBytecode {
 
         buffer.write_variant(proto.line_defined as u32);
         if proto.name.is_some() {
-            let name_reference = self.string_reference(&proto.name.as_ref().unwrap().to_string());
+            let name_reference = self.string_reference(proto.name.as_ref().unwrap().clone());
             buffer.write_variant(name_reference);
         } else {
             buffer.write_variant(0);
@@ -373,7 +368,7 @@ impl LuaBytecode {
 
             buffer.write_variant(proto.locals.len() as u32);
             for local in proto.locals.iter() {
-                let name_reference = self.string_reference(&local.name);
+                let name_reference = self.string_reference(local.name.clone());
                 buffer.write_variant(name_reference);
                 buffer.write_variant(local.start_pc);
                 buffer.write_variant(local.end_pc);
@@ -382,7 +377,7 @@ impl LuaBytecode {
 
             buffer.write_variant(proto.upvalues.len() as u32);
             for upvalue in proto.upvalues.iter() {
-                let reference = self.string_reference(upvalue);
+                let reference = self.string_reference(upvalue.clone());
                 buffer.write_variant(reference);
             }
         } else {
@@ -390,17 +385,17 @@ impl LuaBytecode {
         }
     }
 
-    fn string_from_reference(&self, buffer: &mut Buffer) -> Option<String> {
+    fn string_from_reference(&self, buffer: &mut Buffer) -> Option<RawLuaString> {
         let id = buffer.read_variant();
         if id == 0 {
             return None;
         }
 
-        Some(self.strings.get(id as usize - 1).unwrap().to_string())
+        Some(self.strings.get(id as usize - 1).unwrap().clone())
     }
 
-    fn string_reference(&self, string: &str) -> u32 {
-        self.strings.iter().position(|s| s == string).unwrap() as u32 + 1
+    fn string_reference(&self, string: RawLuaString) -> u32 {
+        self.strings.iter().position(|s| s == &string).unwrap() as u32 + 1
     }
 }
 
@@ -462,8 +457,8 @@ trait Variant {
     fn read_variant(&mut self) -> u32;
     fn write_variant(&mut self, value: u32);
 
-    fn read_string(&mut self) -> String;
-    fn write_string(&mut self, string: &str);
+    fn read_string(&mut self) -> RawLuaString;
+    fn write_string(&mut self, string: RawLuaString);
 }
 
 impl Variant for Buffer {
@@ -494,7 +489,7 @@ impl Variant for Buffer {
         }
     }
 
-    fn read_string(&mut self) -> String {
+    fn read_string(&mut self) -> RawLuaString {
         let mut bytes = Vec::new();
 
         let length = self.read_variant();
@@ -502,15 +497,13 @@ impl Variant for Buffer {
             bytes.push(self.read::<u8>());
         }
 
-        String::from_utf8(bytes).unwrap()
+        bytes
     }
 
-    fn write_string(&mut self, string: &str) {
-        let bytes = string.as_bytes();
-
-        self.write_variant(bytes.len() as u32);
-        for byte in bytes {
-            self.write(*byte);
+    fn write_string(&mut self, string: RawLuaString) {
+        self.write_variant(string.len() as u32);
+        for byte in string {
+            self.write(byte);
         }
     }
 }

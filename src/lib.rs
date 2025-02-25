@@ -19,6 +19,8 @@ enum Format {
     Luau,
 }
 
+type RawLuaString = Vec<u8>;
+
 #[cfg(feature = "lua51")]
 #[derive(Default)]
 struct Header {
@@ -45,7 +47,7 @@ pub struct Bytecode {
 }
 
 pub struct LocalVariable {
-    name: String,
+    name: RawLuaString,
     start_pc: u32,
     end_pc: u32,
 
@@ -100,14 +102,14 @@ pub struct Proto {
     pub line_defined: u32,
     pub last_line_defined: u32,
 
-    pub name: Option<String>,
+    pub name: Option<RawLuaString>,
     pub line_info: Vec<u32>,
     pub absolute_line_info: Vec<i32>,
     pub linegaplog2: u8,
 
     pub protos: Vec<u32>,
     pub locals: Vec<LocalVariable>,
-    pub upvalues: Vec<String>,
+    pub upvalues: Vec<RawLuaString>,
     pub constants: Vec<Constant>,
     pub instructions: Vec<Instruction>,
 }
