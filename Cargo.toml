@@ -5,7 +5,7 @@ description = "A lua bytecode parser/encoder for lua5.1 and luau"
 repository = "https://github.com/lua-tools/lua-bytecode"
 
 version = "0.3.0"
-edition = "2021"
+edition = "2024"
 license = "GPL-3.0-only"
 
 [features]
