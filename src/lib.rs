@@ -1,9 +1,11 @@
 #![allow(dead_code)]
 
 use constant::Constant;
+use opcode::OpCode;
 
 mod buffer;
 pub mod constant;
+pub mod opcode;
 
 #[cfg(feature = "lua51")]
 pub mod lua51;
@@ -59,6 +61,32 @@ pub struct LocalVariable {
 }
 
 pub struct Instruction(pub u32);
+
+#[cfg(feature = "lua51")]
+pub trait LuaInstruction {
+    fn opcode(&self) -> OpCode;
+}
+
+#[cfg(feature = "lua51")]
+impl LuaInstruction for Instruction {
+    fn opcode(&self) -> OpCode {
+        let op = (self.0 & 0xff) as u8;
+        OpCode::LuaOpcode(opcode::LuaOpcode::index(op))
+    }
+}
+
+#[cfg(feature = "luau")]
+pub trait LuauInstruction {
+    fn opcode(&self) -> OpCode;
+}
+
+#[cfg(feature = "luau")]
+impl LuauInstruction for Instruction {
+    fn opcode(&self) -> OpCode {
+        let op = (self.0 & 0xff) as u8;
+        OpCode::LuauOpcode(opcode::LuauOpcode::index(op))
+    }
+}
 
 impl Instruction {
     fn from_bytes(bytes: &[u8]) -> Self {

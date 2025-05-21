@@ -1,9 +1,10 @@
-#[cfg(feature = "luau")]
+#![cfg(feature = "luau")]
+
 use lua_bytecode::luau::LuaBytecode;
+use lua_bytecode::{Instruction, LuauInstruction, opcode::LuauOpcode};
 
 use std::process::Command;
 
-#[cfg(feature = "luau")]
 fn compile(name: &str) -> Vec<u8> {
     let result = Command::new("luau-compile")
         .arg("--binary")
@@ -16,7 +17,6 @@ fn compile(name: &str) -> Vec<u8> {
 }
 
 #[test]
-#[cfg(feature = "luau")]
 fn number() {
     let bytecode = LuaBytecode::from(compile("number").as_slice()).unwrap();
     let main_proto = &bytecode.protos[bytecode.main_proto_id as usize];
@@ -36,7 +36,6 @@ fn number() {
 }
 
 #[test]
-#[cfg(feature = "luau")]
 fn map_iter() {
     let bytecode = LuaBytecode::from(compile("map_iter").as_slice()).unwrap();
     let main_proto = &bytecode.protos[bytecode.main_proto_id as usize];
@@ -53,4 +52,15 @@ fn map_iter() {
     assert_eq!(bytecode.protos.len(), 1);
     assert_eq!(main_proto.locals.len(), 0);
     assert_eq!(main_proto.constants.len(), 7);
+}
+
+#[test]
+fn opcode() {
+    match Instruction(0).opcode() {
+        lua_bytecode::opcode::OpCode::LuauOpcode(op) => {
+            assert_eq!(op, LuauOpcode::Nop);
+        }
+
+        _ => unreachable!(),
+    }
 }

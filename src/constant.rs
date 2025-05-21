@@ -46,6 +46,7 @@ pub enum Constant {
 
 // TODO: hacky code, maybe use traits?
 impl Constant {
+    #[cfg(feature = "lua51")]
     pub fn kind(&self) -> u8 {
         match self {
             Constant::Nil => LUA_CONSTANT_NIL,

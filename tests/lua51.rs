@@ -1,9 +1,9 @@
-#[cfg(feature = "lua51")]
+#![cfg(feature = "lua51")]
+
 use lua_bytecode::{Bytecode, lua51::LuaBytecode};
 
 use std::process::Command;
 
-#[cfg(feature = "lua51")]
 fn compile(name: &str) -> Vec<u8> {
     std::fs::create_dir_all("tests/cache").unwrap();
     let result = Command::new("sh")
@@ -20,7 +20,6 @@ fn compile(name: &str) -> Vec<u8> {
 }
 
 #[test]
-#[cfg(feature = "lua51")]
 fn number() {
     let mut bytecode = <Bytecode as LuaBytecode>::from(compile("number").as_slice()).unwrap();
     let main_proto = &bytecode.protos[bytecode.main_proto_id as usize];
@@ -37,4 +36,17 @@ fn number() {
     assert_eq!(bytecode.protos.len(), 1);
     assert_eq!(main_proto.locals.len(), 3);
     assert_eq!(main_proto.constants.len(), 2);
+}
+
+#[test]
+fn opcode() {
+    use lua_bytecode::{Instruction, LuaInstruction, opcode::LuaOpcode};
+
+    match Instruction(0).opcode() {
+        lua_bytecode::opcode::OpCode::LuaOpcode(op) => {
+            assert_eq!(op, LuaOpcode::Move);
+        }
+
+        _ => unreachable!(),
+    }
 }
