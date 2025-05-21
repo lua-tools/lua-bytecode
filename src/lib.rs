@@ -23,7 +23,7 @@ type RawLuaString = Vec<u8>;
 
 #[cfg(feature = "lua51")]
 #[derive(Default)]
-struct Header {
+pub struct Header {
     pub version: u8,
     pub format: u8,
 
