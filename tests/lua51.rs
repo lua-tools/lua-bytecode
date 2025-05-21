@@ -40,11 +40,27 @@ fn number() {
 
 #[test]
 fn opcode() {
-    use lua_bytecode::{Instruction, LuaInstruction, opcode::LuaOpcode};
+    use lua_bytecode::opcode::{Instruction, LuaInstruction, LuaOpcode};
 
     match Instruction(0).opcode() {
         lua_bytecode::opcode::OpCode::LuaOpcode(op) => {
             assert_eq!(op, LuaOpcode::Move);
+        }
+
+        _ => unreachable!(),
+    }
+
+    match Instruction(1).opcode() {
+        lua_bytecode::opcode::OpCode::LuaOpcode(op) => {
+            assert_eq!(op, LuaOpcode::LoadK);
+        }
+
+        _ => unreachable!(),
+    }
+
+    match Instruction(37).opcode() {
+        lua_bytecode::opcode::OpCode::LuaOpcode(op) => {
+            assert_eq!(op, LuaOpcode::Vararg);
         }
 
         _ => unreachable!(),

@@ -1,7 +1,9 @@
 #![cfg(feature = "luau")]
 
-use lua_bytecode::luau::LuaBytecode;
-use lua_bytecode::{Instruction, LuauInstruction, opcode::LuauOpcode};
+use lua_bytecode::{
+    luau::LuaBytecode,
+    opcode::{Instruction, LuauInstruction, LuauOpcode},
+};
 
 use std::process::Command;
 
@@ -59,6 +61,14 @@ fn opcode() {
     match Instruction(0).opcode() {
         lua_bytecode::opcode::OpCode::LuauOpcode(op) => {
             assert_eq!(op, LuauOpcode::Nop);
+        }
+
+        _ => unreachable!(),
+    }
+
+    match Instruction(82).opcode() {
+        lua_bytecode::opcode::OpCode::LuauOpcode(op) => {
+            assert_eq!(op, LuauOpcode::IDivK);
         }
 
         _ => unreachable!(),

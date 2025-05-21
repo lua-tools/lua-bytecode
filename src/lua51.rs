@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{opcode::Instruction, *};
 use buffer::Buffer;
 
 pub trait LuaBytecode {

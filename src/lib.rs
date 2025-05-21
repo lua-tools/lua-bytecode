@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 
 use constant::Constant;
-use opcode::OpCode;
 
 mod buffer;
 pub mod constant;
@@ -60,40 +59,6 @@ pub struct LocalVariable {
     register: u8,
 }
 
-pub struct Instruction(pub u32);
-
-#[cfg(feature = "lua51")]
-pub trait LuaInstruction {
-    fn opcode(&self) -> OpCode;
-}
-
-#[cfg(feature = "lua51")]
-impl LuaInstruction for Instruction {
-    fn opcode(&self) -> OpCode {
-        let op = (self.0 & 0xff) as u8;
-        OpCode::LuaOpcode(opcode::LuaOpcode::index(op))
-    }
-}
-
-#[cfg(feature = "luau")]
-pub trait LuauInstruction {
-    fn opcode(&self) -> OpCode;
-}
-
-#[cfg(feature = "luau")]
-impl LuauInstruction for Instruction {
-    fn opcode(&self) -> OpCode {
-        let op = (self.0 & 0xff) as u8;
-        OpCode::LuauOpcode(opcode::LuauOpcode::index(op))
-    }
-}
-
-impl Instruction {
-    fn from_bytes(bytes: &[u8]) -> Self {
-        Instruction(u32::from_le_bytes(bytes.try_into().unwrap()))
-    }
-}
-
 #[derive(Default)]
 pub struct Proto {
     #[cfg(feature = "luau")]
@@ -119,5 +84,5 @@ pub struct Proto {
     pub locals: Vec<LocalVariable>,
     pub upvalues: Vec<RawLuaString>,
     pub constants: Vec<Constant>,
-    pub instructions: Vec<Instruction>,
+    pub instructions: Vec<opcode::Instruction>,
 }

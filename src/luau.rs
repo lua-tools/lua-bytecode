@@ -1,5 +1,6 @@
 use crate::buffer::Buffer;
-use crate::{Constant, Instruction, LocalVariable, Proto, RawLuaString, constant};
+use crate::opcode::Instruction;
+use crate::{Constant, LocalVariable, Proto, RawLuaString, constant};
 
 const LBC_TYPE_TAGGED_USERDATA_END: u8 = 64 + 32;
 const LBC_TYPE_TAGGED_USERDATA_BASE: u8 = 64;
