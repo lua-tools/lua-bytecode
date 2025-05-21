@@ -18,9 +18,7 @@ fn compile(name: &str) -> Vec<u8> {
 #[test]
 #[cfg(feature = "luau")]
 fn number() {
-    let mut bytecode = LuaBytecode::new();
-    bytecode.parse(compile("number").as_slice()).unwrap();
-
+    let bytecode = LuaBytecode::from(compile("number").as_slice()).unwrap();
     let main_proto = &bytecode.protos[bytecode.main_proto_id as usize];
 
     assert_eq!(bytecode.protos.len(), 1);
@@ -28,9 +26,8 @@ fn number() {
     assert_eq!(main_proto.constants.len(), 2);
 
     let data = bytecode.write();
-    let mut bytecode = LuaBytecode::new();
-    bytecode.parse(data.as_slice()).unwrap();
 
+    let bytecode = LuaBytecode::from(data.as_slice()).unwrap();
     let main_proto = &bytecode.protos[bytecode.main_proto_id as usize];
 
     assert_eq!(bytecode.protos.len(), 1);
@@ -41,9 +38,7 @@ fn number() {
 #[test]
 #[cfg(feature = "luau")]
 fn map_iter() {
-    let mut bytecode = LuaBytecode::new();
-    bytecode.parse(compile("map_iter").as_slice()).unwrap();
-
+    let bytecode = LuaBytecode::from(compile("map_iter").as_slice()).unwrap();
     let main_proto = &bytecode.protos[bytecode.main_proto_id as usize];
 
     assert_eq!(bytecode.protos.len(), 1);
@@ -52,9 +47,7 @@ fn map_iter() {
 
     let data = bytecode.write();
 
-    let mut bytecode = LuaBytecode::new();
-    bytecode.parse(data.as_slice()).unwrap();
-
+    let bytecode = LuaBytecode::from(data.as_slice()).unwrap();
     let main_proto = &bytecode.protos[bytecode.main_proto_id as usize];
 
     assert_eq!(bytecode.protos.len(), 1);

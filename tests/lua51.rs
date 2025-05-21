@@ -1,5 +1,5 @@
 #[cfg(feature = "lua51")]
-use lua_bytecode::{lua51::LuaBytecode, Bytecode};
+use lua_bytecode::{Bytecode, lua51::LuaBytecode};
 
 use std::process::Command;
 
@@ -22,9 +22,7 @@ fn compile(name: &str) -> Vec<u8> {
 #[test]
 #[cfg(feature = "lua51")]
 fn number() {
-    let mut bytecode = <Bytecode as LuaBytecode>::new();
-    bytecode.parse(compile("number").as_slice()).unwrap();
-
+    let mut bytecode = <Bytecode as LuaBytecode>::from(compile("number").as_slice()).unwrap();
     let main_proto = &bytecode.protos[bytecode.main_proto_id as usize];
 
     assert_eq!(bytecode.protos.len(), 1);
@@ -32,9 +30,8 @@ fn number() {
     assert_eq!(main_proto.constants.len(), 2);
 
     let data = bytecode.write();
-    let mut bytecode = <Bytecode as LuaBytecode>::new();
-    bytecode.parse(data.as_slice()).unwrap();
 
+    let bytecode = <Bytecode as LuaBytecode>::from(data.as_slice()).unwrap();
     let main_proto = &bytecode.protos[bytecode.main_proto_id as usize];
 
     assert_eq!(bytecode.protos.len(), 1);

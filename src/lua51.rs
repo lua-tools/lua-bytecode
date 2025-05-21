@@ -2,8 +2,7 @@ use crate::*;
 use buffer::Buffer;
 
 pub trait LuaBytecode {
-    fn new() -> Bytecode;
-    fn parse(&mut self, data: &[u8]) -> Result<(), String>;
+    fn from(data: &[u8]) -> Result<Bytecode, String>;
     fn parse_header(&self, buffer: &mut Buffer) -> Header;
     fn parse_proto(&mut self, buffer: &mut Buffer) -> Proto;
 
@@ -12,18 +11,15 @@ pub trait LuaBytecode {
 }
 
 impl LuaBytecode for Bytecode {
-    fn new() -> Bytecode {
-        Default::default()
-    }
-
-    fn parse(&mut self, data: &[u8]) -> Result<(), String> {
+    fn from(data: &[u8]) -> Result<Bytecode, String> {
+        let mut bytecode = Bytecode::default();
         let mut buffer = Buffer::new(data.to_vec());
 
-        self.header = self.parse_header(&mut buffer);
-        let main_proto = self.parse_proto(&mut buffer);
-        self.protos.push(main_proto);
+        bytecode.header = bytecode.parse_header(&mut buffer);
+        let main_proto = bytecode.parse_proto(&mut buffer);
+        bytecode.protos.push(main_proto);
 
-        Ok(())
+        Ok(bytecode)
     }
 
     fn parse_header(&self, buffer: &mut Buffer) -> Header {

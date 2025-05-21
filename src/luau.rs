@@ -27,15 +27,12 @@ pub struct LuaBytecode {
 }
 
 impl LuaBytecode {
-    pub fn new() -> Self {
-        Default::default()
-    }
-
-    pub fn parse(&mut self, data: &[u8]) -> Result<(), String> {
+    pub fn from(data: &[u8]) -> Result<LuaBytecode, String> {
+        let mut bytecode = LuaBytecode::default();
         let mut buffer = Buffer::new(data.to_vec());
 
-        self.version = buffer.read::<u8>();
-        if self.version == 0 {
+        bytecode.version = buffer.read::<u8>();
+        if bytecode.version == 0 {
             let mut bytes = Vec::new();
             loop {
                 let character = buffer.read::<u8>();
@@ -51,11 +48,11 @@ impl LuaBytecode {
                 "Error message in bytecode: {}",
                 error.to_str().unwrap()
             ));
-        } else if self.version < 4 || self.version > 6 {
+        } else if bytecode.version < 4 || bytecode.version > 6 {
             return Err("Bytecode version mismatch".into());
         }
 
-        self.types_version = if self.version >= 4 {
+        bytecode.types_version = if bytecode.version >= 4 {
             buffer.read::<u8>()
         } else {
             0
@@ -64,19 +61,23 @@ impl LuaBytecode {
         // read string table
         let string_count = buffer.read_variant();
         for _ in 0..string_count {
-            self.strings.push(buffer.read_string());
+            bytecode.strings.push(buffer.read_string());
         }
 
         let userdata_type_limit = LBC_TYPE_TAGGED_USERDATA_END - LBC_TYPE_TAGGED_USERDATA_BASE;
-        self.userdata_type_map.reserve(userdata_type_limit.into());
+        bytecode
+            .userdata_type_map
+            .reserve(userdata_type_limit.into());
 
         // userdata type remapping table
-        if self.types_version == 3 {
+        if bytecode.types_version == 3 {
             let mut index = buffer.read::<u8>();
             while index != 0 {
                 let reference = buffer.read_variant();
                 if index - 1 < userdata_type_limit {
-                    self.userdata_type_map.insert((index - 1).into(), reference);
+                    bytecode
+                        .userdata_type_map
+                        .insert((index - 1).into(), reference);
                 }
 
                 index = buffer.read::<u8>();
@@ -86,12 +87,12 @@ impl LuaBytecode {
         // read proto table
         let proto_count = buffer.read_variant();
         for i in 0..proto_count {
-            let proto = self.parse_proto(i as u32, &mut buffer);
-            self.protos.push(proto);
+            let proto = bytecode.parse_proto(i as u32, &mut buffer);
+            bytecode.protos.push(proto);
         }
 
-        self.main_proto_id = buffer.read_variant();
-        Ok(())
+        bytecode.main_proto_id = buffer.read_variant();
+        Ok(bytecode)
     }
 
     fn parse_proto(&self, index: u32, buffer: &mut Buffer) -> Proto {
