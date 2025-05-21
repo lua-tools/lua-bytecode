@@ -1,6 +1,9 @@
 #![allow(dead_code)]
 
+use constant::Constant;
+
 mod buffer;
+pub mod constant;
 
 #[cfg(feature = "lua51")]
 pub mod lua51;
@@ -53,21 +56,6 @@ pub struct LocalVariable {
 
     #[cfg(feature = "luau")]
     register: u8,
-}
-
-#[cfg(feature = "lua51")]
-const LUA_CONSTANT_NIL: u8 = 0;
-#[cfg(feature = "lua51")]
-const LUA_CONSTANT_BOOLEAN: u8 = 1;
-#[cfg(feature = "lua51")]
-const LUA_CONSTANT_NUMBER: u8 = 3;
-#[cfg(feature = "lua51")]
-const LUA_CONSTANT_STRING: u8 = 4;
-
-#[derive(Default)]
-pub struct Constant {
-    kind: u8,
-    value: Vec<u8>,
 }
 
 pub struct Instruction(pub u32);

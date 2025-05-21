@@ -62,28 +62,21 @@ impl LuaBytecode for Bytecode {
 
         let constant_count = buffer.read::<u32>();
         for _ in 0..constant_count {
-            let mut constant = Constant::default();
-            constant.kind = buffer.read::<u8>();
+            let kind = buffer.read::<u8>();
 
-            match constant.kind {
-                LUA_CONSTANT_NIL => (),
-
-                LUA_CONSTANT_BOOLEAN => {
-                    constant.value = buffer.read::<u8>().to_le_bytes().to_vec();
-                }
-
-                LUA_CONSTANT_NUMBER => {
-                    constant.value = buffer.read::<f64>().to_le_bytes().to_vec();
-                }
-
-                LUA_CONSTANT_STRING => {
-                    constant.value = buffer.read_string();
-                }
+            dbg!(kind);
+            let constant = match kind {
+                constant::LUA_CONSTANT_NIL => Constant::Nil,
+                constant::LUA_CONSTANT_BOOLEAN => Constant::Bool(buffer.read::<u8>() > 0),
+                constant::LUA_CONSTANT_NUMBER => Constant::Number(buffer.read::<f64>()),
+                constant::LUA_CONSTANT_STRING => Constant::String(buffer.read_string()),
 
                 _ => {
                     unreachable!();
                 }
-            }
+            };
+
+            dbg!(&constant);
 
             proto.constants.push(constant);
         }
@@ -157,27 +150,23 @@ impl LuaBytecode for Bytecode {
         dbg!(proto.constants.len());
         buffer.write::<u32>(proto.constants.len() as u32);
         for constant in proto.constants.iter() {
-            buffer.write::<u8>(constant.kind);
-            match constant.kind {
-                LUA_CONSTANT_NIL => (),
+            buffer.write::<u8>(constant.kind());
 
-                LUA_CONSTANT_BOOLEAN => {
-                    buffer.write::<u8>(constant.value[0]);
+            match constant {
+                Constant::Nil => (),
+                Constant::Bool(value) => {
+                    buffer.write(*value);
                 }
 
-                LUA_CONSTANT_NUMBER => {
-                    buffer.write::<f64>(f64::from_le_bytes(
-                        constant.value.as_slice().try_into().unwrap(),
-                    ));
+                Constant::Number(value) => {
+                    buffer.write(*value);
                 }
 
-                LUA_CONSTANT_STRING => {
-                    buffer.write_string(constant.value.clone());
+                Constant::String(value) => {
+                    buffer.write_string(value.clone());
                 }
 
-                _ => {
-                    unreachable!();
-                }
+                _ => unreachable!(),
             }
         }
 

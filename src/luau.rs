@@ -1,17 +1,8 @@
 use crate::buffer::Buffer;
-use crate::{Constant, Instruction, LocalVariable, Proto, RawLuaString};
+use crate::{Constant, Instruction, LocalVariable, Proto, RawLuaString, constant};
 
 const LBC_TYPE_TAGGED_USERDATA_END: u8 = 64 + 32;
 const LBC_TYPE_TAGGED_USERDATA_BASE: u8 = 64;
-
-const LUAU_CONSTANT_NIL: u8 = 0;
-const LUAU_CONSTANT_BOOLEAN: u8 = 1;
-const LUAU_CONSTANT_NUMBER: u8 = 2;
-const LUAU_CONSTANT_STRING: u8 = 3;
-const LUAU_CONSTANT_IMPORT: u8 = 4;
-const LUAU_CONSTANT_TABLE: u8 = 5;
-const LUAU_CONSTANT_CLOSURE: u8 = 6;
-const LUAU_CONSTANT_VECTOR: u8 = 7;
 
 #[derive(Default)]
 pub struct LuaBytecode {
@@ -133,59 +124,46 @@ impl LuaBytecode {
 
         let constant_count = buffer.read_variant();
         for _ in 0..constant_count {
-            let mut constant = Constant::default();
-            constant.kind = buffer.read::<u8>();
+            let kind = buffer.read::<u8>();
 
-            match constant.kind {
-                LUAU_CONSTANT_NIL => (),
-                LUAU_CONSTANT_BOOLEAN => {
-                    constant.value = buffer.read::<u8>().to_le_bytes().to_vec();
+            let constant = match kind {
+                constant::LUAU_CONSTANT_NIL => Constant::Nil,
+                constant::LUAU_CONSTANT_BOOLEAN => Constant::Bool(buffer.read::<bool>()),
+
+                constant::LUAU_CONSTANT_NUMBER => Constant::Number(buffer.read::<f64>()),
+
+                constant::LUAU_CONSTANT_STRING => {
+                    Constant::String(self.string_from_reference(buffer).unwrap())
                 }
 
-                LUAU_CONSTANT_NUMBER => {
-                    constant.value = buffer.read::<f64>().to_le_bytes().to_vec();
-                }
+                constant::LUAU_CONSTANT_IMPORT => Constant::Import(buffer.read::<i32>()),
 
-                LUAU_CONSTANT_STRING => {
-                    constant.value = self.string_from_reference(buffer).unwrap();
-                }
-
-                LUAU_CONSTANT_IMPORT => {
-                    constant.value = buffer.read::<i32>().to_le_bytes().to_vec();
-                }
-
-                LUAU_CONSTANT_TABLE => {
+                constant::LUAU_CONSTANT_TABLE => {
                     let length = buffer.read_variant();
-                    constant.value.extend_from_slice(&length.to_le_bytes());
 
+                    let mut keys = vec![];
                     for _ in 0..length {
                         let key = buffer.read_variant();
-                        constant.value.extend_from_slice(&key.to_le_bytes());
+                        keys.push(key);
                     }
+
+                    Constant::Table(length, keys)
                 }
 
-                LUAU_CONSTANT_CLOSURE => {
+                constant::LUAU_CONSTANT_CLOSURE => {
                     let proto_id = buffer.read_variant();
-                    constant.value = proto_id.to_le_bytes().to_vec();
+                    Constant::Closure(proto_id)
                 }
 
-                LUAU_CONSTANT_VECTOR => {
-                    constant
-                        .value
-                        .extend_from_slice(&buffer.read::<f32>().to_le_bytes());
-                    constant
-                        .value
-                        .extend_from_slice(&buffer.read::<f32>().to_le_bytes());
-                    constant
-                        .value
-                        .extend_from_slice(&buffer.read::<f32>().to_le_bytes());
-                    constant
-                        .value
-                        .extend_from_slice(&buffer.read::<f32>().to_le_bytes());
-                }
+                constant::LUAU_CONSTANT_VECTOR => Constant::Vector(
+                    buffer.read::<f32>(),
+                    buffer.read::<f32>(),
+                    buffer.read::<f32>(),
+                    buffer.read::<f32>(),
+                ),
 
                 _ => unreachable!(),
-            }
+            };
 
             proto.constants.push(constant);
         }
@@ -301,36 +279,38 @@ impl LuaBytecode {
 
         buffer.write_variant(proto.constants.len() as u32);
         for constant in proto.constants.iter() {
-            buffer.write::<u8>(constant.kind.clone() as u8);
+            buffer.write::<u8>(constant.kind_luau());
 
-            match constant.kind {
-                LUAU_CONSTANT_STRING => {
-                    let reference = self.string_reference(constant.value.clone());
+            match constant {
+                Constant::Nil => (),
+
+                Constant::Bool(value) => buffer.write(*value),
+                Constant::Number(value) => buffer.write(*value),
+
+                Constant::String(value) => {
+                    let reference = self.string_reference(value.clone());
                     buffer.write_variant(reference);
                 }
 
-                LUAU_CONSTANT_TABLE => {
-                    let mut shape = Buffer::new(constant.value.clone());
-                    let length: u32 = shape.read();
-
-                    buffer.write_variant(length);
-                    for _ in 0..length {
-                        let key: u32 = shape.read();
-                        buffer.write_variant(key);
+                Constant::Table(length, keys) => {
+                    buffer.write_variant(*length);
+                    for key in keys {
+                        buffer.write_variant(*key);
                     }
                 }
 
-                LUAU_CONSTANT_CLOSURE => {
-                    let proto_id =
-                        u32::from_le_bytes(constant.value.clone().as_slice().try_into().unwrap());
-                    buffer.write_variant(proto_id);
+                Constant::Closure(proto_id) => {
+                    buffer.write_variant(*proto_id);
                 }
 
-                _ => {
-                    for byte in constant.value.iter() {
-                        buffer.write::<u8>(*byte);
-                    }
+                Constant::Vector(x, y, z, w) => {
+                    buffer.write(x);
+                    buffer.write(y);
+                    buffer.write(z);
+                    buffer.write(w);
                 }
+
+                Constant::Import(value) => buffer.write(*value),
             }
         }
 
