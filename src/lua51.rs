@@ -64,7 +64,6 @@ impl LuaBytecode for Bytecode {
         for _ in 0..constant_count {
             let kind = buffer.read::<u8>();
 
-            dbg!(kind);
             let constant = match kind {
                 constant::LUA_CONSTANT_NIL => Constant::Nil,
                 constant::LUA_CONSTANT_BOOLEAN => Constant::Bool(buffer.read::<u8>() > 0),
@@ -75,8 +74,6 @@ impl LuaBytecode for Bytecode {
                     unreachable!();
                 }
             };
-
-            dbg!(&constant);
 
             proto.constants.push(constant);
         }
@@ -147,7 +144,6 @@ impl LuaBytecode for Bytecode {
             buffer.write::<i32>(instruction.0 as i32);
         }
 
-        dbg!(proto.constants.len());
         buffer.write::<u32>(proto.constants.len() as u32);
         for constant in proto.constants.iter() {
             buffer.write::<u8>(constant.kind());
