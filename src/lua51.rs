@@ -47,7 +47,7 @@ impl LuaBytecode for Bytecode {
     }
 
     fn parse_proto(&mut self, buffer: &mut Buffer) -> Proto {
-        let mut proto = Proto::new();
+        let mut proto = Proto::default();
 
         proto.name = Some(buffer.read_string());
         proto.line_defined = buffer.read::<u32>();
@@ -66,7 +66,7 @@ impl LuaBytecode for Bytecode {
 
         let constant_count = buffer.read::<u32>();
         for _ in 0..constant_count {
-            let mut constant = Constant::new();
+            let mut constant = Constant::default();
             constant.kind = buffer.read::<u8>();
 
             match constant.kind {

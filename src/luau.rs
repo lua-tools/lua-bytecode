@@ -95,7 +95,7 @@ impl LuaBytecode {
     }
 
     fn parse_proto(&self, index: u32, buffer: &mut Buffer) -> Proto {
-        let mut proto = Proto::new();
+        let mut proto = Proto::default();
 
         proto.bytecode_id = index;
 
@@ -132,7 +132,7 @@ impl LuaBytecode {
 
         let constant_count = buffer.read_variant();
         for _ in 0..constant_count {
-            let mut constant = Constant::new();
+            let mut constant = Constant::default();
             constant.kind = buffer.read::<u8>();
 
             match constant.kind {

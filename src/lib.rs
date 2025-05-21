@@ -64,18 +64,10 @@ const LUA_CONSTANT_NUMBER: u8 = 3;
 #[cfg(feature = "lua51")]
 const LUA_CONSTANT_STRING: u8 = 4;
 
+#[derive(Default)]
 pub struct Constant {
     kind: u8,
     value: Vec<u8>,
-}
-
-impl Constant {
-    fn new() -> Self {
-        Constant {
-            kind: 0,
-            value: Vec::new(),
-        }
-    }
 }
 
 pub struct Instruction(pub u32);
@@ -112,10 +104,4 @@ pub struct Proto {
     pub upvalues: Vec<RawLuaString>,
     pub constants: Vec<Constant>,
     pub instructions: Vec<Instruction>,
-}
-
-impl Proto {
-    fn new() -> Self {
-        Default::default()
-    }
 }
