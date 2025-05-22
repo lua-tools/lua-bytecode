@@ -2,7 +2,7 @@
 
 use lua_bytecode::{
     luau::LuaBytecode,
-    opcode::{Instruction, LuauInstruction, LuauOpcode},
+    opcode::{Instruction, LuauInstruction, LuauOpcode, Opcode},
 };
 
 use std::process::Command;
@@ -57,9 +57,9 @@ fn map_iter() {
 }
 
 #[test]
-fn opcode() {
+fn instruction() {
     match Instruction(0).opcode() {
-        lua_bytecode::opcode::OpCode::LuauOpcode(op) => {
+        lua_bytecode::opcode::Opcode::LuauOpcode(op) => {
             assert_eq!(op, LuauOpcode::Nop);
         }
 
@@ -67,10 +67,33 @@ fn opcode() {
     }
 
     match Instruction(82).opcode() {
-        lua_bytecode::opcode::OpCode::LuauOpcode(op) => {
+        lua_bytecode::opcode::Opcode::LuauOpcode(op) => {
             assert_eq!(op, LuauOpcode::IDivK);
         }
 
+        _ => unreachable!(),
+    }
+
+    let instruction = Instruction::from_abc(Opcode::LuauOpcode(LuauOpcode::Call), 0, 1 + 1, 1);
+    match instruction.opcode() {
+        Opcode::LuauOpcode(op) => {
+            assert_eq!(op, LuauOpcode::Call);
+
+            assert_eq!(instruction.a(), 0); // base
+            assert_eq!(instruction.b(), 2); // parameters + 1
+            assert_eq!(instruction.c(), 1); // ?
+        }
+        _ => unreachable!(),
+    }
+
+    let instruction = Instruction::from_ad(Opcode::LuauOpcode(LuauOpcode::LoadK), 0, 0);
+    match instruction.opcode() {
+        Opcode::LuauOpcode(op) => {
+            assert_eq!(op, LuauOpcode::LoadK);
+
+            assert_eq!(instruction.a(), 0); // target
+            assert_eq!(instruction.d(), 0); // constant
+        }
         _ => unreachable!(),
     }
 }

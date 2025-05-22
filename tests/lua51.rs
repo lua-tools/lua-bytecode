@@ -1,6 +1,10 @@
 #![cfg(feature = "lua51")]
 
-use lua_bytecode::{Bytecode, lua51::LuaBytecode};
+use lua_bytecode::{
+    Bytecode,
+    lua51::LuaBytecode,
+    opcode::{LuaOpMode, Opcode},
+};
 
 use std::process::Command;
 
@@ -39,11 +43,11 @@ fn number() {
 }
 
 #[test]
-fn opcode() {
+fn instruction() {
     use lua_bytecode::opcode::{Instruction, LuaInstruction, LuaOpcode};
 
     match Instruction(0).opcode() {
-        lua_bytecode::opcode::OpCode::LuaOpcode(op) => {
+        lua_bytecode::opcode::Opcode::LuaOpcode(op) => {
             assert_eq!(op, LuaOpcode::Move);
         }
 
@@ -51,7 +55,7 @@ fn opcode() {
     }
 
     match Instruction(1).opcode() {
-        lua_bytecode::opcode::OpCode::LuaOpcode(op) => {
+        lua_bytecode::opcode::Opcode::LuaOpcode(op) => {
             assert_eq!(op, LuaOpcode::LoadK);
         }
 
@@ -59,10 +63,35 @@ fn opcode() {
     }
 
     match Instruction(37).opcode() {
-        lua_bytecode::opcode::OpCode::LuaOpcode(op) => {
+        lua_bytecode::opcode::Opcode::LuaOpcode(op) => {
             assert_eq!(op, LuaOpcode::Vararg);
         }
 
+        _ => unreachable!(),
+    }
+
+    let instruction = Instruction::from_abc(Opcode::LuaOpcode(LuaOpcode::Call), 0, 1 + 1, 1);
+    match instruction.opcode() {
+        Opcode::LuaOpcode(op) => {
+            assert_eq!(op, LuaOpcode::Call);
+            assert_eq!(op.mode(), LuaOpMode::IABC);
+
+            assert_eq!(instruction.a(), 0); // base
+            assert_eq!(instruction.b(), 2); // parameters + 1
+            assert_eq!(instruction.c(), 1); // ?
+        }
+        _ => unreachable!(),
+    }
+
+    let instruction = Instruction::from_abx(Opcode::LuaOpcode(LuaOpcode::GetGlobal), 0, 100);
+    match instruction.opcode() {
+        Opcode::LuaOpcode(op) => {
+            assert_eq!(op, LuaOpcode::GetGlobal);
+            assert_eq!(op.mode(), LuaOpMode::IABx);
+
+            assert_eq!(instruction.a(), 0); // base
+            assert_eq!(instruction.bx(), 100); // global
+        }
         _ => unreachable!(),
     }
 }
