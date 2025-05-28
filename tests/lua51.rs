@@ -13,14 +13,14 @@ fn compile(name: &str) -> Vec<u8> {
     let result = Command::new("sh")
         .arg("-c")
         .arg(format!(
-            "(luac5.1 -o tests/cache/bytecode.out tests/lua51/{}.lua)",
-            name
+            "(luac5.1 -o tests/cache/bytecode_{}.out tests/lua51/{}.lua)",
+            name, name
         ))
         .output()
         .unwrap();
 
     assert!(result.status.success());
-    std::fs::read("tests/cache/bytecode.out").unwrap()
+    std::fs::read(format!("tests/cache/bytecode_{name}.out")).unwrap()
 }
 
 #[test]
