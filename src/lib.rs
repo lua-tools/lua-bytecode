@@ -26,7 +26,7 @@ enum Format {
 type RawLuaString = Vec<u8>;
 
 #[cfg(feature = "lua51")]
-#[derive(Default)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
 pub struct Header {
     pub version: u8,
     pub format: u8,
@@ -43,13 +43,14 @@ pub struct Header {
 }
 
 #[cfg(feature = "lua51")]
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Bytecode {
     pub header: Header,
     pub protos: Vec<Proto>,
     pub main_proto_id: u32,
 }
 
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct LocalVariable {
     name: RawLuaString,
     start_pc: u32,
@@ -59,7 +60,7 @@ pub struct LocalVariable {
     register: u8,
 }
 
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Proto {
     #[cfg(feature = "luau")]
     pub bytecode_id: u32,

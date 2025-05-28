@@ -25,7 +25,7 @@ pub const MAX_ARG_BX: u32 = (1 << LUA_BX_SIZE) - 1;
 #[cfg(feature = "lua51")]
 pub const MAX_ARG_SBX: i32 = (MAX_ARG_BX as i32) >> 1;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum LuaOpMode {
     IA,
     IAB,
@@ -37,9 +37,9 @@ pub enum LuaOpMode {
     IAsBx,
 }
 
+#[cfg(feature = "lua51")]
 #[repr(u8)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-#[cfg(feature = "lua51")]
 pub enum LuaOpcode {
     Move,
     LoadK,
@@ -95,9 +95,9 @@ pub enum LuaOpcode {
     Vararg,
 }
 
+#[cfg(feature = "luau")]
 #[repr(u8)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-#[cfg(feature = "luau")]
 pub enum LuauOpcode {
     Nop,
     Break,
@@ -270,7 +270,7 @@ impl LuauOpcode {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Opcode {
     #[cfg(feature = "lua51")]
     LuaOpcode(LuaOpcode),
@@ -278,6 +278,7 @@ pub enum Opcode {
     LuauOpcode(LuauOpcode),
 }
 
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
 pub struct Instruction(pub u32);
 
 #[cfg(feature = "lua51")]
